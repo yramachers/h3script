@@ -5,7 +5,7 @@
 // plotcurve(0.0)
 // ** for a zero lightest neutrino mass eigenstate
 // ** or
-// plotcurve(1.0e-5))
+// plotcurve(1.0e-2))
 // ** for a 10 meV lightest neutrino mass eigenstate
 // ******
 // simple Kurie plot script for Tritium
@@ -14,7 +14,7 @@
 // mixings and mass splittings hard-coded, see
 // betashape function below.
 // ******************************************************
-// *** run plotcurve(neutrino mass in keV) function at the end
+// *** run plotcurve(neutrino mass in eV) function at the end
 // *** edit hard-coded energy resolution value in plotcurve(mn)
 // *** Output: - integral spectrum fraction of range of interest
 // *** and - plot of derivative of Kurie curve to see
@@ -23,7 +23,13 @@
 // *** of interest for integral fraction scaling.
 // *******************************************************
 
-Double_t Qvalue = 18.574; // units in [keV]
+// ------------------------------------------------------- //
+// Tritium Data :
+Double_t Qvalue = 18.574; // units are [keV]
+Double_t T_half = 12.32;  // units are [yr]
+// ------------------------------------------------------- //
+
+
 TCanvas* ch3;
 TF1* fh3;
 TF1* fh3n;
@@ -242,25 +248,50 @@ void plotcurve(Double_t mn) // mn in [eV]
 {
   cout.precision(10);
   
-  Double_t Eres = 1.0e-5; // Gauss std [keV]
-  // Double_t Eres = 1.0;
+  
+  // Define some common choices for sensitivity studies :
+
+  
+  // Here is a general attempt to set the left-limit based on the mass, but it may be overriden below:
+  Double_t range_left;
+  if (mn > 0.0)
+    range_left = Qvalue - 5*(mn/1000.); // [keV]
+  else
+    range_left = Qvalue - 6.0e-5; // [keV]
+
+  
+  // --------------------------------------------- //
+  // For 100 meV (NH) :
+  Double_t exposure = 5.0E18;
+  // Double_t Eres = 18.6e-6;  // (note : cannot be 0)
+  // Double_t Eres = 100.0e-6;  // (note : cannot be 0)
+  Double_t Eres = 100.0e-8;  // (note : cannot be 0)
+  // --------------------------------------------- //
+  // For minimum m_v (NH) :
+  // Double_t exposure = 5.0E21;
+  // Double_t Eres = 1.0e-6;
+  // --------------------------------------------- //
+  // For minimum m_v (IH) :
+  // Double_t exposure = 7.0E18;
+  // Double_t Eres = 1.0e-8
+  // --------------------------------------------- //
+  
+  
+  // Double_t Eres = 1.0e-5; // Gauss std [keV]
+  // Double_t Eres = 1.0e-8;
   
   // This also sets up the neutrino mass array, and must be called :
   cout << " Effective neutrino mass = " << effectiveNeutrinoMass(mn) << " eV " << endl;
   cout << " Energy resolution       = " << Eres << " keV " << endl;
   
-  Double_t range_left;
-  if (mn > 0.0)
-    range_left = Qvalue - 10*(mn/1000.); // [keV]
-  else
-    range_left = Qvalue - 1.0e-4; // [keV]
- 
+  
   // Hard-wire this. For small neutrino masses a 0.1 eV range works :
-  range_left = Qvalue - 1.0e-4;
+  // range_left = Qvalue - 3.0e-4;
   // For larger neutrino masses :
   // range_left = Qvalue - 0.25e-3;
   
-  Double_t range_right = Qvalue + 5.0*Eres;
+  // Double_t range_right = Qvalue + 5.0*Eres;
+  Double_t range_right = Qvalue + 10.0E-06;
   std::cout << " range_left, range_right: " << range_left << " , " << range_right << std::endl;
 
   fh3 = new TF1("T beta spectrum",betashape,1.0e-6,18.6,4);
@@ -312,7 +343,7 @@ void plotcurve(Double_t mn) // mn in [eV]
   fh3_mn0->SetParameter(0,0.0);
   fh3_mn0->SetParameter(1,0.0);
   fh3_mn0->SetParameter(2,0.0);
-  fh3_mn0->SetParameter(3,-1.0*mn);
+  fh3_mn0->SetParameter(3,-1.0);
   Double_t norm_mn0 = fh3_mn0->Integral(1.0e-6,Qvalue);
   
   // UNSMEARED BETA-SPECTRUM (mv=0) :
@@ -320,21 +351,21 @@ void plotcurve(Double_t mn) // mn in [eV]
   fh3n_mn0->SetParameter(0,Eres);
   fh3n_mn0->SetParameter(1,0.0);
   fh3n_mn0->SetParameter(2,norm_mn0);
-  fh3n_mn0->SetParameter(3,-1.0*mn);
+  fh3n_mn0->SetParameter(3,-1.0);
   
   // SMEARED BETA-SPECTRUM (mv=0) :
   fh3n_smear_mn0 = new TF1("T beta spectrum (smeared)",normalisedbeta_smeared,range_left,range_right,4);
   fh3n_smear_mn0->SetParameter(0,Eres);
   fh3n_smear_mn0->SetParameter(1,0.0);
   fh3n_smear_mn0->SetParameter(2,norm_mn0);
-  fh3n_smear_mn0->SetParameter(3,-1.0*mn);
+  fh3n_smear_mn0->SetParameter(3,-1.0);
   
   // SMEARED KURIE FUNCTION :
-  kh3_smear_mn0 = new TF1("T Kurie (smeared)",kurie_smeared,range_left,range_right,4);
+  kh3_smear_mn0 = new TF1("T Kurie (smeared m0)",kurie_smeared,range_left,range_right,4);
   kh3_smear_mn0->SetParameter(0,Eres);
   kh3_smear_mn0->SetParameter(1,0.0);
   kh3_smear_mn0->SetParameter(2,norm_mn0);
-  kh3_smear_mn0->SetParameter(3,-1.0*mn);
+  kh3_smear_mn0->SetParameter(3,-1.0);
   kh3_smear_mn0->SetRange(range_left, range_right);
   
   fh3_mn0->SetNpx(1000);
@@ -346,39 +377,29 @@ void plotcurve(Double_t mn) // mn in [eV]
   kh3_mn0->SetParameter(0,Eres);
   kh3_mn0->SetParameter(1,0.0);
   kh3_mn0->SetParameter(2,norm_mn0);
-  kh3_mn0->SetParameter(3,-1.0*mn);
+  kh3_mn0->SetParameter(3,-1.0);
   kh3_mn0->SetNpx(10000);
 
   // Make pseudo-data histograms:
   // ----------------------------
-  // Exposure in tritium atom-years :
-  // Double_t exposure = 3.0E19;
-  // This seems to be about right for 9 meV
-  // Double_t exposure =3.4E21;
-  
-  // This seems to be about right for minimum m_v (NH - 1 meV resolution) :
-  Double_t exposure = 2.0E21;
-  
-  // This seems to be about right for minimum m_v (IH - 1 meV resolution) :
-  // Double_t exposure = 7.0E18;
-  
-  // For 100 meV (NH - 1 meV resolution) :
-  // Double_t exposure = 5.0E17;
-
-  Double_t lambda_T = TMath::Log(2.0)/12.32;
+  Double_t lambda_T = TMath::Log(2.0)/T_half;
   Double_t n_decays = exposure*lambda_T;
   
   // NOT RIGHT YET. CHECK WHICH FUNCTION AND STATISTICAL ERRORS.
   
   // Bin by some factor of the resolution :
   // int nbins = int((Qvalue+5*Eres-range_left)/(1.0*Eres));
-  int nbins = int((range_right-range_left)/(2.0*Eres));
-  nbins = 40;
+  // int nbins = int((range_right-range_left)/(2.0*Eres));
+  int nbins = 43;
+  // 1 meV bins :
+  // nbins = int((range_right-range_left)*1.0E06);
+  
   cout << " Kurie pseudo-data plot : nbins = " << nbins << endl;
   TH1F* kurie_hist = new TH1F("kurie_data","kurie_data",nbins,range_left,range_right);
   Double_t nEventsBinnedTotal = 0;
   Double_t spectrumFraction = 0;
   Double_t chisq = 0;
+  Int_t nbins_chisq = 0;
   for (int ibin = 1; ibin <= nbins; ibin++){
     Double_t T_bin = kurie_hist->GetBinCenter(ibin);
     Double_t T_bin_width = kurie_hist->GetBinWidth(ibin);
@@ -399,12 +420,20 @@ void plotcurve(Double_t mn) // mn in [eV]
       Double_t chisq_bin = pow((kurie_hist->GetBinContent(ibin) - kh3_smear_mn0->Eval(T_bin)),2.)/pow(kurie_hist->GetBinError(ibin),2.);
       std::cout << " T, chisq_bin = " << T_bin << " , " << chisq_bin << std::endl;
       chisq += chisq_bin;
+      nbins_chisq++;
     }
   }
   
   // Do the plotting:
   // ----------------
+  // Aesthetics :
+  gStyle->SetOptStat(00000000);
+  // gStyle->SetFillColor(0);
+  gROOT->SetStyle("Plain");
+
   ch3 = new TCanvas("H-3","H-3",1200,600);
+  ch3->SetGridx();
+  ch3->SetGridy();
   // fh3smooth->SetTitle("Kurie function derivative;Energy [keV];dN(E)/dE");
   // fh3smooth->DrawDerivative("AL");
   // fh3smooth->Draw();
@@ -420,7 +449,7 @@ void plotcurve(Double_t mn) // mn in [eV]
   // kh3_smear_mn0->SetLineStyle(2);
   // kh3_smear_mn0->Draw("same");
   
-  kh3_smear->SetTitle("Kurie Function;Energy [keV]; K(T)");
+  kh3_smear->SetTitle(";Energy [keV]; K(T)");
   kh3_smear->Draw();
   kh3_smear_mn0->SetLineStyle(2);
   kh3_smear_mn0->Draw("same");
@@ -434,4 +463,20 @@ void plotcurve(Double_t mn) // mn in [eV]
   std::cout << " chi2 w.r.t. null hypothesis: " << chisq << std::endl;
   std::cout << " chi2 probability: " << TMath::Prob(chisq,1) << std::endl;
   
+  
+  // --------------------------------------------------------------------------- //
+  // Save output for combined plotting :
+  TFile* histFile = new TFile("kurie_100meV_neg_resolution.root","RECREATE");
+  kh3_smear->Write();
+  kh3_smear_mn0->Write();
+  kurie_hist->Write();
+  histFile->Close();
+  // --------------------------------------------------------------------------- //
+
+  
 }
+
+
+
+
+

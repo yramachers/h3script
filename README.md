@@ -14,5 +14,8 @@ for a 10 meV lightest neutrino mass eigenstate
 
 - Run plotcurve(neutrino mass in keV) function at the end
 - edit hard-coded energy resolution value in plotcurve(mn)
+- for plotting pseudo-data, set exposure by hand in the routine "plotCurve"
 - Output: - integral spectrum fraction of range of interest
   and plot of derivative of Kurie curve to see shape changes clearly.
+  
+- Run tritiumKuriePlotter.C for overlaying various Kurie plots and/or pseudo-data on a single plot.
